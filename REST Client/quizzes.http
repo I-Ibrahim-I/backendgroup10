@@ -1,0 +1,15 @@
+@baseUrl = http://localhost:3000
+
+### Read a certain category (Histoire)
+GET {{baseUrl}}/quizzes/categories/list?label=Histoire
+
+### Read categories
+GET {{baseUrl}}/quizzes/categories
+
+### Delete the quiz with ID == 3
+DELETE {{baseUrl}}/quizzes/3
+
+######### ERROR OPERATION  ###########
+
+### Read quiz which does not exists
+GET {{baseUrl}}/quizzes/200
