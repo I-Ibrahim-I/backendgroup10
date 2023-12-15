@@ -1,14 +1,14 @@
 /* eslint-disable consistent-return */
+const escape = require('escape-html');
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const { authorize } = require('../utils/auths');
 
 const router = express.Router();
-const secretToken = 'soislechangementquetuveuxvoirdanslemonde ';
+const secretToken = 'soislechangementquetuveuxvoirdanslemonde';
 
 const {
-  getAllUsers,
-  loginUser,
-  registerUser,
+  getAllUsers, loginUser, registerUser, updateUserPoint,
 } = require('../models/users');
 
 /* GET users listing. */
@@ -24,11 +24,15 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/details', async (req, res) => {
+router.get('/details', authorize, async (req, res) => {
+  const currentUser = req.user;
+  console.log('je suis dans details');
+  console.log(currentUser);
+  const userId = currentUser.rows[0].user_id;
+  const username = currentUser.rows[0].pseudo;
+
   try {
-    const token = req.headers.authorization.replace('Bearer ', '');
-    const decoded = jwt.verify(token, secretToken);
-    return res.json({ userID: decoded.userID, userName: decoded.userName });
+    return res.json({ userID: userId, userName: username });
   } catch (error) {
     res.status(500).send('Erreur serveur');
   }
@@ -36,8 +40,16 @@ router.get('/details', async (req, res) => {
 
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
+
+  if (!username || username.trim() === '') {
+    return res.status(400).send('Le champ username est vide');
+  }
+  if (!password) {
+    return res.status(400).send('Le champ password est vide');
+  }
+
   try {
-    const user = await loginUser(username, password);
+    const user = await loginUser(escape(username), password);
 
     if (user.rows.length > 0) {
       const userID = user.rows[0].user_id;
@@ -60,8 +72,16 @@ router.post('/login', async (req, res) => {
 
 router.post('/register', async (req, res) => {
   const { username, password } = req.body;
+
+  if (!username || username.trim() === '') {
+    return res.status(400).send('Le champ username est vide');
+  }
+  if (!password) {
+    return res.status(400).send('Le champ password est vide');
+  }
+
   try {
-    const user = await registerUser(username, password);
+    const user = await registerUser(escape(username), password);
     if (user.rowCount > 0) {
       res.status(200).json({ message: 'Connexion réussie register' });
     } else {
@@ -72,4 +92,13 @@ router.post('/register', async (req, res) => {
   }
 });
 
+router.patch('/:id', async (req, res) => {
+  try {
+    const updatedPoint = await updateUserPoint(req?.params?.id, req?.body);
+    if (!updatedPoint) return res.sendStatus(404);
+    return res.json(updatedPoint);
+  } catch (err) {
+    res.status(500).send('Erreur serveur');
+  }
+});
 module.exports = router;

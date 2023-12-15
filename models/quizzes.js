@@ -1,3 +1,5 @@
+/* eslint-disable eol-last */
+/* eslint-disable no-restricted-syntax */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-plusplus */
 /* eslint-disable no-console */
@@ -13,7 +15,10 @@ const pool = require('../db');
  * userId : The user's ID.
  */
 async function readAllQuizzesByUser(userId) {
-  const quizzes = await pool.query('SELECT * FROM project.quizzes WHERE user_id=$1', [userId]);
+  const quizzes = await pool.query(
+    'SELECT * FROM project.quizzes WHERE user_id=$1 ORDER BY date_creation DESC',
+    [userId],
+  );
   if (quizzes.rows.length > 0) {
     console.log('quizzes ok');
     return quizzes.rows;
@@ -145,7 +150,50 @@ async function readAllQuizzesByCategory(categoryName) {
   }
   return undefined;
 }
+async function readOneQuizDetailsByID(quizId) {
+  const quiz = await pool.query('SELECT * FROM project.quizzes WHERE quiz_id=$1', [quizId]);
+  console.log('quiz', quiz);
 
+  const questions = await pool.query('SELECT * FROM project.questions WHERE quiz_id=$1', [quizId]);
+  console.log('questions', questions);
+
+  const allquestions = questions.rows;
+  console.log('alllllllllllllllquestions', allquestions);
+
+  const AllquestionsAnswers = [];
+
+  for (const q of allquestions) {
+    let correctAnswer;
+    const badAnswers = [];
+
+    const answers = await pool.query('SELECT * FROM project.answers WHERE question=$1', [
+      q.question_id,
+    ]);
+
+    answers.rows.forEach((a) => {
+      if (a.is_correct) {
+        correctAnswer = a.answer;
+      } else {
+        badAnswers.push(a.answer);
+      }
+    });
+
+    const questionAnswers = {
+      question_id: q.question_id,
+      question: q.question,
+      correct_answer: correctAnswer,
+      bad_answers: badAnswers,
+    };
+
+    AllquestionsAnswers.push(questionAnswers);
+  }
+
+  if (AllquestionsAnswers.length > 0) {
+    return AllquestionsAnswers;
+  }
+
+  return undefined;
+}
 module.exports = {
   readAllQuizzesByUser,
   readCategoryByLabel,
@@ -154,4 +202,5 @@ module.exports = {
   addQuestionsAnswers,
   deleteOneQuiz,
   readAllQuizzesByCategory,
+  readOneQuizDetailsByID,
 };

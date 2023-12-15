@@ -1,18 +1,18 @@
 const jwt = require('jsonwebtoken');
-const { readOneUserFromUsername } = require('../models/users');
+const { currentUser } = require('../models/users');
 
-const jwtSecret = 'ilovemypizza!';
+const jwtSecret = 'soislechangementquetuveuxvoirdanslemonde';
 
-const authorize = (req, res, next) => {
+const authorize = async (req, res, next) => {
   const token = req.get('authorization');
   if (!token) return res.sendStatus(401);
 
   try {
     const decoded = jwt.verify(token, jwtSecret);
     console.log('decoded', decoded);
-    const { username } = decoded;
+    const { userName } = decoded;
 
-    const existingUser = readOneUserFromUsername(username);
+    const existingUser = await currentUser(userName);
 
     if (!existingUser) return res.sendStatus(401);
 
@@ -25,9 +25,9 @@ const authorize = (req, res, next) => {
 };
 
 const isAdmin = (req, res, next) => {
-  const { username } = req.user;
+  const { userName } = req.user;
 
-  if (username !== 'admin') return res.sendStatus(403);
+  if (userName !== 'admin') return res.sendStatus(403);
   return next();
 };
 

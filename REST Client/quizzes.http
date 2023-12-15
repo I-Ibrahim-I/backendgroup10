@@ -1,13 +1,47 @@
 @baseUrl = http://localhost:3000
 
-### Read a certain category (Histoire)
-GET {{baseUrl}}/quizzes/categories/list?label=Histoire
 
-### Read categories
+### Read all categories
 GET {{baseUrl}}/quizzes/categories
+
+### Read all quizzes by category
+GET {{baseUrl}}/quizzes/readAllQuizzesByCategories/?label=Mathématiques
 
 ### Delete the quiz with ID == 3
 DELETE {{baseUrl}}/quizzes/3
+
+#### Create a quiz by using the user account
+#### First login as the user
+# @name user
+
+POST {{baseUrl}}/users/login
+Content-Type: application/json
+
+{
+    "username":"quizwiz",
+    "password":"quizwiz"
+}
+
+#### Create a quiz with one question using the user token
+POST {{baseUrl}}/quizzes
+Content-Type: application/json
+authorization: {{user.response.body.token}}
+
+{
+    "title": "math quizwiz",
+    "category": "Mathématiques",
+    "questions": [
+        [
+            "2*2",
+            "4",
+            "10",
+            "2.5",
+            "3"
+        ]
+    ]
+}
+
+
 
 ######### ERROR OPERATION  ###########
 
